@@ -189,3 +189,38 @@ moveNext(indexMonth - 1, false);
 
 $(".c-aside__num").text(day);
 $(".c-aside__month").text(monthText[month - 1]);
+
+function saveEventToLocalStorage() {
+  let events = [];
+
+  dataCel.each(function() {
+    if ($(this).hasClass("event")) {
+      let event = {
+        day: $(this).data("day"),
+        name: $(this).data("name"),
+        notes: $(this).data("notes"),
+        tag: $(this).attr("class").split(' ').find(cls => cls.startsWith('event--'))
+      };
+      events.push(event);
+    }
+  });
+
+  localStorage.setItem('calendarEvents', JSON.stringify(events));
+}
+
+saveBtn.on("click", function() {
+  // Your existing code for saving an event...
+  saveEventToLocalStorage();
+});
+
+function loadEventsFromLocalStorage() {
+  let events = JSON.parse(localStorage.getItem('calendarEvents')) || [];
+
+  events.forEach(event => {
+    defaultEvents(event.day, event.name, event.notes, event.tag.replace('event--', ''));
+  });
+}
+
+// Call this function when initializing the calendar
+loadEventsFromLocalStorage();
+
