@@ -13,13 +13,10 @@ var indexMonth = month;
 var todayBtn = $(".c-today__btn");
 var addBtn = $(".js-event__add");
 var saveBtn = $(".js-event__save");
-var editBtn = $(".js-event__edit"); // New button
-var deleteBtn = $(".js-event__delete"); // New button
 var closeBtn = $(".js-event__close");
 var winCreator = $(".js-event__creator");
-var winEditor = $(".js-event__editor"); // New editor window
-var today = year + "-" + month + "-" + day;
-var currentSelectedDate = null; // Track selected date for editing
+var today = year + "-" + (month < 10 ? "0" + month : month) + "-" + (day < 10 ? "0" + day : day); // Fix date format
+var currentSelectedDate = today; // Initialize selected date with today's date
 
 // Set default events
 function defaultEvents(event) {
@@ -48,16 +45,6 @@ function deleteEvent(date, eventIndex) {
     if (events[date].length === 0) {
       delete events[date];
     }
-    localStorage.setItem('calendarEvents', JSON.stringify(events));
-    updateCalendarUI();
-  }
-}
-
-// Function to edit an event
-function editEvent(date, eventIndex, newName, newNotes, newTag) {
-  let events = JSON.parse(localStorage.getItem('calendarEvents')) || {};
-  if (events[date]) {
-    events[date][eventIndex] = { name: newName, notes: newNotes, tag: newTag };
     localStorage.setItem('calendarEvents', JSON.stringify(events));
     updateCalendarUI();
   }
@@ -110,27 +97,6 @@ $(document).on("click", ".js-event__delete", function() {
   deleteEvent(currentSelectedDate, eventIndex);
 });
 
-// Event handler for editing an event
-$(document).on("click", ".js-event__edit", function() {
-  var eventIndex = $(this).closest(".c-aside__event").data("index");
-  let events = JSON.parse(localStorage.getItem('calendarEvents'))[currentSelectedDate];
-  var event = events[eventIndex];
-  
-  $("input[name=name]").val(event.name);
-  $("input[name=date]").val(currentSelectedDate);
-  $("textarea[name=notes]").val(event.notes);
-  $("select[name=tags]").val(event.tag);
-
-  saveBtn.off("click").on("click", function() {
-    editEvent(currentSelectedDate, eventIndex, $("input[name=name]").val(), $("textarea[name=notes]").val(), $("select[name=tags]").val());
-    winCreator.removeClass("isVisible");
-    $("body").removeClass("overlay");
-    $("#addEvent")[0].reset();
-  });
-
-  winCreator.addClass("isVisible");
-});
-
 // Event handler for selecting a date
 dataCel.on("click", function() {
   var selectedDate = $(this).data("day");
@@ -143,7 +109,24 @@ dataCel.on("click", function() {
   $(this).addClass("isSelected");
 });
 
+// Event handler for showing the add event modal
+addBtn.on("click", function() {
+  winCreator.addClass("isVisible");
+  $("body").addClass("overlay");
+  $("input[name=date]").val(currentSelectedDate); // Pre-fill date input with the current selected date
+});
+
+// Close the event creator
+closeBtn.on("click", function() {
+  winCreator.removeClass("isVisible");
+  $("body").removeClass("overlay");
+});
+
 // Initialize the calendar
 $(document).ready(function() {
-  updateCalendarUI();
+  updateCalendarUI(); // Load events from localStorage and update UI
+
+  // Set today's date in the sidebar
+  $(".c-aside__num").text(day);
+  $(".c-aside__month").text(monthText[month - 1]);
 });
