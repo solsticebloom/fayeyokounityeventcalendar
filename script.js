@@ -13,11 +13,8 @@ var indexMonth = month;
 var todayBtn = $(".c-today__btn");
 var addBtn = $(".js-event__add");
 var saveBtn = $(".js-event__save");
-var editBtn = $(".js-event__edit"); // New button
-var deleteBtn = $(".js-event__delete"); // New button
 var closeBtn = $(".js-event__close");
 var winCreator = $(".js-event__creator");
-var winEditor = $(".js-event__editor"); // New editor window
 var inputDate = $(this).data();
 var today = year + "-" + month + "-" + day;
 
@@ -51,12 +48,18 @@ dataCel.each(function() {
 addBtn.on("click", function() {
   winCreator.addClass("isVisible");
   $("body").addClass("overlay");
-  $("input[name=date]").val(today);
+  dataCel.each(function() {
+    if ($(this).hasClass("isSelected")) {
+      today = $(this).data("day");
+      $("input[name=date]").val(today);
+    } else {
+      $("input[name=date]").val(today);
+    }
+  });
 });
 
 closeBtn.on("click", function() {
   winCreator.removeClass("isVisible");
-  winEditor.removeClass("isVisible"); // Close editor
   $("body").removeClass("overlay");
 });
 
@@ -68,14 +71,14 @@ saveBtn.on("click", function() {
 
   dataCel.each(function() {
     if ($(this).data("day") === inputDate) {
-      if (inputName) {
+      if (inputName != null) {
         $(this).attr("data-name", inputName);
       }
-      if (inputNotes) {
+      if (inputNotes != null) {
         $(this).attr("data-notes", inputNotes);
       }
       $(this).addClass("event");
-      if (inputTag) {
+      if (inputTag != null) {
         $(this).addClass("event--" + inputTag);
       }
       fillEventSidebar($(this));
@@ -85,34 +88,6 @@ saveBtn.on("click", function() {
   winCreator.removeClass("isVisible");
   $("body").removeClass("overlay");
   $("#addEvent")[0].reset();
-  saveEventToLocalStorage();
-});
-
-editBtn.on("click", function() {
-  var selectedEvent = $(".c-cal__cel.isSelected");
-  if (selectedEvent.length > 0) {
-    var eventDate = selectedEvent.data("day");
-    var eventName = selectedEvent.data("name");
-    var eventNotes = selectedEvent.data("notes");
-    var eventTag = selectedEvent.attr("class").split(' ').find(cls => cls.startsWith('event--')).replace('event--', '');
-
-    $("input[name=name]").val(eventName);
-    $("input[name=date]").val(eventDate);
-    $("textarea[name=notes]").val(eventNotes);
-    $("select[name=tags]").val(eventTag);
-    
-    winCreator.removeClass("isVisible");
-    winEditor.addClass("isVisible");
-  }
-});
-
-deleteBtn.on("click", function() {
-  var selectedEvent = $(".c-cal__cel.isSelected");
-  if (selectedEvent.length > 0) {
-    selectedEvent.removeClass("event").removeAttr("data-name").removeAttr("data-notes");
-    fillEventSidebar(selectedEvent);
-    saveEventToLocalStorage();
-  }
 });
 
 function fillEventSidebar(self) {
@@ -233,8 +208,18 @@ function saveEventToLocalStorage() {
   localStorage.setItem('calendarEvents', JSON.stringify(events));
 }
 
+saveBtn.on("click", function() {
+  // Your existing code for saving an event...
+  saveEventToLocalStorage();
+});
+
 function loadEventsFromLocalStorage() {
   let events = JSON.parse(localStorage.getItem('calendarEvents')) || [];
 
   events.forEach(event => {
-    defaultEvents(event.day, event.name, event.notes, event.tag.replace('event--', '
+    defaultEvents(event.day, event.name, event.notes, event.tag.replace('event--', ''));
+  });
+}
+
+// Call this function when initializing the calendar
+loadEventsFromLocalStorage();
