@@ -542,63 +542,23 @@ input {
   height: 40px;
     }
 
-/* General Event Styles */
-.event {
-  position: relative;
-  display: block;
-  width: 12px;
-  height: 12px;
-  margin: 0 auto;
-  background-color: #F5F5F5;
-  border-radius: 50%;
-  z-index: 1;
+/* Ensure the cell layout remains consistent when events are added */
+.c-cal__cel {
+  position: relative; /* Keep the day number in its original place */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px; /* Or adjust as needed */
 }
 
-/* Event Types */
-.event--birthday {
-  background-color: #FACC2E;
+.c-cal__cel.event {
+  background-color: #f0f8ff; /* Or whatever color for events */
+  /* Ensure adding an event doesn't alter the positioning */
 }
 
-.event--festivity {
-  background-color: #10DDC2;
+.c-cal__cel .event--important, .event--birthday, .event--festivity {
+  /* Additional styling for different event types */
+  border-left: 4px solid #ff6347; /* Example for important events */
+  /* Ensure these don't affect layout either */
 }
 
-.event--important {
-  background-color: #F57170;
-}
-
-/* Tooltip for Events */
-.event-tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  visibility: hidden;
-  opacity: 0;
-  background-color: #ffffff;
-  color: #000;
-  padding: 5px 10px;
-  font-size: 12px;
-  border-radius: 5px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-  transition: opacity 0.2s ease-in-out;
-  white-space: nowrap;
-}
-
-.event:hover .event-tooltip {
-  visibility: visible;
-  opacity: 1;
-}
-
-/* Add transitions for a more dynamic hover effect */
-.event--birthday:hover {
-  background-color: #fbd54f;
-}
-
-.event--festivity:hover {
-  background-color: #1ae5d4;
-}
-
-.event--important:hover {
-  background-color: #ff6e6c;
-}
