@@ -77,13 +77,19 @@ saveBtn.on("click", function() {
       if (inputNotes != null) {
         $(this).attr("data-notes", inputNotes);
       }
-      $(this).addClass("event");
+      $(this).addClass("event"); // Add event class
       if (inputTag != null) {
-        $(this).addClass("event--" + inputTag);
+        $(this).addClass("event--" + inputTag); // Add specific event tag class
       }
       fillEventSidebar($(this));
     }
   });
+
+  winCreator.removeClass("isVisible");
+  $("body").removeClass("overlay");
+  $("#addEvent")[0].reset();
+});
+
 
   winCreator.removeClass("isVisible");
   $("body").removeClass("overlay");
