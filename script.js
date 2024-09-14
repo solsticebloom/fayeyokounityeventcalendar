@@ -15,29 +15,28 @@ var addBtn = $(".js-event__add");
 var saveBtn = $(".js-event__save");
 var closeBtn = $(".js-event__close");
 var winCreator = $(".js-event__creator");
-var inputDate = $(this).data();
-var today = year + "-" + month + "-" + day;
+var today = `${year}-${month}-${day}`;
 
-// Set default events
+// Initialize Calendar & Load Events
+loadEventsFromLocalStorage();
+
+// Set default events function
 function defaultEvents(dataDay, dataName, dataNotes, classTag) {
   var date = $('*[data-day="' + dataDay + '"]');
   date.attr("data-name", dataName);
   date.attr("data-notes", dataNotes);
-  date.addClass("event");
-  date.addClass("event--" + classTag);
+  date.addClass("event event--" + classTag);
 }
 
-// Functions control
+// Today Button functionality
 todayBtn.on("click", function() {
-  if (month < indexMonth) {
-    var step = indexMonth % month;
-    movePrev(step, true);
-  } else if (month > indexMonth) {
-    var step = month - indexMonth;
-    moveNext(step, true);
+  if (month !== indexMonth) {
+    const step = Math.abs(indexMonth - month);
+    month < indexMonth ? movePrev(step, true) : moveNext(step, true);
   }
 });
 
+// Mark today's date and select it
 dataCel.each(function() {
   if ($(this).data("day") === today) {
     $(this).addClass("isToday");
@@ -45,24 +44,21 @@ dataCel.each(function() {
   }
 });
 
+// Add event button functionality
 addBtn.on("click", function() {
   winCreator.addClass("isVisible");
   $("body").addClass("overlay");
-  dataCel.each(function() {
-    if ($(this).hasClass("isSelected")) {
-      today = $(this).data("day");
-      $("input[name=date]").val(today);
-    } else {
-      $("input[name=date]").val(today);
-    }
-  });
+  var selectedDay = $(".isSelected").data("day") || today;
+  $("input[name=date]").val(selectedDay);
 });
 
+// Close event creator window
 closeBtn.on("click", function() {
   winCreator.removeClass("isVisible");
   $("body").removeClass("overlay");
 });
 
+// Save new event
 saveBtn.on("click", function() {
   var inputName = $("input[name=name]").val();
   var inputDate = $("input[name=date]").val();
@@ -71,131 +67,79 @@ saveBtn.on("click", function() {
 
   dataCel.each(function() {
     if ($(this).data("day") === inputDate) {
-      if (inputName != null) {
-        $(this).attr("data-name", inputName);
-      }
-      if (inputNotes != null) {
-        $(this).attr("data-notes", inputNotes);
-      }
-      $(this).addClass("event"); // Add event class
-      if (inputTag != null) {
-        $(this).addClass("event--" + inputTag); // Add specific event tag class
-      }
+      if (inputName) $(this).attr("data-name", inputName);
+      if (inputNotes) $(this).attr("data-notes", inputNotes);
+      $(this).addClass("event event--" + inputTag); // Add classes dynamically
       fillEventSidebar($(this));
     }
   });
 
+  // Close event creator and reset form
   winCreator.removeClass("isVisible");
   $("body").removeClass("overlay");
-  $("#addEvent")[0].reset();
+  $("#addEvent")[0].reset(); // Reset the form
+
+  // Save to localStorage
+  saveEventToLocalStorage();
 });
 
-
-  winCreator.removeClass("isVisible");
-  $("body").removeClass("overlay");
-  $("#addEvent")[0].reset();
-});
-
+// Fill event details in the sidebar
 function fillEventSidebar(self) {
-  $(".c-aside__event").remove();
-  var thisName = self.attr("data-name");
-  var thisNotes = self.attr("data-notes");
-  var thisImportant = self.hasClass("event--important");
-  var thisBirthday = self.hasClass("event--birthday");
-  var thisFestivity = self.hasClass("event--festivity");
-  var thisEvent = self.hasClass("event");
+  $(".c-aside__event").remove(); // Clear sidebar events
+  var eventName = self.attr("data-name");
+  var eventNotes = self.attr("data-notes");
+  var eventTagClass = self.attr("class").split(' ').find(cls => cls.startsWith('event--'));
 
-  switch (true) {
-    case thisImportant:
-      $(".c-aside__eventList").append(
-        "<p class='c-aside__event c-aside__event--important'>" +
-        thisName + " <span> • " + thisNotes + "</span></p>"
-      );
-      break;
-    case thisBirthday:
-      $(".c-aside__eventList").append(
-        "<p class='c-aside__event c-aside__event--birthday'>" +
-        thisName + " <span> • " + thisNotes + "</span></p>"
-      );
-      break;
-    case thisFestivity:
-      $(".c-aside__eventList").append(
-        "<p class='c-aside__event c-aside__event--festivity'>" +
-        thisName + " <span> • " + thisNotes + "</span></p>"
-      );
-      break;
-    case thisEvent:
-      $(".c-aside__eventList").append(
-        "<p class='c-aside__event'>" +
-        thisName + " <span> • " + thisNotes + "</span></p>"
-      );
-      break;
-  }
+  var eventHTML = `<p class='c-aside__event ${eventTagClass}'>${eventName} <span> • ${eventNotes}</span></p>`;
+  $(".c-aside__eventList").append(eventHTML);
 }
 
+// Highlight selected date and show its details
 dataCel.on("click", function() {
-  var thisEl = $(this);
-  var thisDay = $(this).attr("data-day").slice(8);
-  var thisMonth = $(this).attr("data-day").slice(5, 7);
-
-  fillEventSidebar($(this));
-
-  $(".c-aside__num").text(thisDay);
-  $(".c-aside__month").text(monthText[thisMonth - 1]);
-
   dataCel.removeClass("isSelected");
-  thisEl.addClass("isSelected");
+  $(this).addClass("isSelected");
+  
+  fillEventSidebar($(this));
+  $(".c-aside__num").text($(this).attr("data-day").slice(8));
+  $(".c-aside__month").text(monthText[$(this).attr("data-day").slice(5, 7) - 1]);
 });
 
-function moveNext(fakeClick, indexNext) {
-  for (var i = 0; i < fakeClick; i++) {
-    $(".c-main").css({ left: "-=100%" });
-    $(".c-paginator__month").css({ left: "-=100%" });
-    if (indexNext) {
-      indexMonth += 1;
-    }
+// Move to the next or previous month
+function moveNext(steps, increment) {
+  for (var i = 0; i < steps; i++) {
+    $(".c-main, .c-paginator__month").css({ left: "-=100%" });
+    if (increment) indexMonth++;
   }
 }
 
-function movePrev(fakeClick, indexPrev) {
-  for (var i = 0; i < fakeClick; i++) {
-    $(".c-main").css({ left: "+=100%" });
-    $(".c-paginator__month").css({ left: "+=100%" });
-    if (indexPrev) {
-      indexMonth -= 1;
-    }
+function movePrev(steps, decrement) {
+  for (var i = 0; i < steps; i++) {
+    $(".c-main, .c-paginator__month").css({ left: "+=100%" });
+    if (decrement) indexMonth--;
   }
 }
 
+// Buttons for navigation
+buttonsPaginator("#next", monthEl, ".c-paginator__month", true, false);
+buttonsPaginator("#prev", monthEl, ".c-paginator__month", false, true);
+
+// Paginator button click handler
 function buttonsPaginator(buttonId, mainClass, monthClass, next, prev) {
-  if (next) {
-    $(buttonId).on("click", function() {
-      if (indexMonth >= 2) {
-        $(mainClass).css({ left: "+=100%" });
-        $(monthClass).css({ left: "+=100%" });
-        indexMonth -= 1;
-      }
-    });
-  }
-  if (prev) {
-    $(buttonId).on("click", function() {
-      if (indexMonth <= 11) {
-        $(mainClass).css({ left: "-=100%" });
-        $(monthClass).css({ left: "-=100%" });
-        indexMonth += 1;
-      }
-    });
-  }
+  $(buttonId).on("click", function() {
+    if (next && indexMonth <= 11) {
+      $(mainClass).css({ left: "-=100%" });
+      $(monthClass).css({ left: "-=100%" });
+      indexMonth++;
+    }
+    if (prev && indexMonth >= 2) {
+      $(mainClass).css({ left: "+=100%" });
+      $(monthClass).css({ left: "+=100%" });
+      indexMonth--;
+    }
+  });
 }
 
-buttonsPaginator("#next", monthEl, ".c-paginator__month", false, true);
-buttonsPaginator("#prev", monthEl, ".c-paginator__month", true, false);
-
-moveNext(indexMonth - 1, false);
-
-$(".c-aside__num").text(day);
-$(".c-aside__month").text(monthText[month - 1]);
-
+// Save events to localStorage
 function saveEventToLocalStorage() {
   let events = [];
 
@@ -214,18 +158,14 @@ function saveEventToLocalStorage() {
   localStorage.setItem('calendarEvents', JSON.stringify(events));
 }
 
-saveBtn.on("click", function() {
-  // Your existing code for saving an event...
-  saveEventToLocalStorage();
-});
-
+// Load events from localStorage
 function loadEventsFromLocalStorage() {
   let events = JSON.parse(localStorage.getItem('calendarEvents')) || [];
-
   events.forEach(event => {
     defaultEvents(event.day, event.name, event.notes, event.tag.replace('event--', ''));
   });
 }
 
-// Call this function when initializing the calendar
-loadEventsFromLocalStorage();
+// Initial display of today's date
+$(".c-aside__num").text(day);
+$(".c-aside__month").text(monthText[month - 1]);
